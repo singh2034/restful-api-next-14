@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 const ObjectId = require("mongoose").Types.ObjectId;
 
-// GET user request
+// GET user request or Getting a user
 export const GET = async () => {
   // getting the user data from the DB
   try {
@@ -13,13 +13,13 @@ export const GET = async () => {
     const users = await User.find();
     return new NextResponse(JSON.stringify(users), { status: 200 });
   } catch (error: any) {
-    return new NextResponse("Error in fetching users" + error.message, {
+    return new NextResponse("Error in fetching users." + error.message, {
       status: 500,
     });
   }
 };
 
-// POST user request
+// POST user request or Creating a new user
 export const POST = async (request: Request) => {
   // creating new user and saving its data in DB
   try {
@@ -28,17 +28,17 @@ export const POST = async (request: Request) => {
     const newUser = new User(body);
     await newUser.save();
     return new NextResponse(
-      JSON.stringify({ message: "New User is Created", user: newUser }),
+      JSON.stringify({ message: "New User is Created.", user: newUser }),
       { status: 200 }
     );
   } catch (error: any) {
-    return new NextResponse("Error in creating new user" + error.message, {
+    return new NextResponse("Error in creating new user." + error.message, {
       status: 500,
     });
   }
 };
 
-// PATCH user request
+// PATCH user request or Updating the existing user
 export const PATCH = async (request: Request) => {
   // updating the existing user data in the DB
   try {
@@ -50,7 +50,7 @@ export const PATCH = async (request: Request) => {
     if (!userId || !newUserName) {
       return new NextResponse(
         JSON.stringify({
-          message: "ID or new username not found",
+          message: "ID or new username not found.",
         }),
         { status: 400 }
       );
@@ -58,7 +58,7 @@ export const PATCH = async (request: Request) => {
     if (!Types.ObjectId.isValid(userId)) {
       return new NextResponse(
         JSON.stringify({
-          message: "Invalid User ID",
+          message: "Invalid User ID.",
         }),
         { status: 400 }
       );
@@ -79,7 +79,7 @@ export const PATCH = async (request: Request) => {
     if (!updatedUser) {
       return new NextResponse(
         JSON.stringify({
-          message: "User not found in the database",
+          message: "User not found in the database.",
         }),
         { status: 400 }
       );
@@ -87,13 +87,58 @@ export const PATCH = async (request: Request) => {
     // user updated successfully
     return new NextResponse(
       JSON.stringify({
-        message: "User is updated successfully",
+        message: "User is updated successfully.",
         user: updatedUser,
       }),
       { status: 200 }
     );
   } catch (error: any) {
-    return new NextResponse("Error in updating user" + error.message, {
+    return new NextResponse("Error in updating user." + error.message, {
+      status: 500,
+    });
+  }
+};
+
+// DELETE user request
+export const DELETE = async (request: Request) => {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({
+          message: "ID not found.",
+        }),
+        { status: 400 }
+      );
+    }
+    // any error in getting the userId
+    if (!Types.ObjectId.isValid(userId)) {
+      return new NextResponse(JSON.stringify({ message: "Invalid User ID." }), {
+        status: 400,
+      });
+    }
+    await connect();
+    // delete the ID from the DB
+    const deleteUser = await User.findByIdAndDelete(new Types.ObjectId(userId));
+    // any error in deleting the userId
+    if (!deleteUser) {
+      return new NextResponse(
+        JSON.stringify({
+          message: "user not found",
+        })
+      );
+    }
+    // if there is no error then,
+    return new NextResponse(
+      JSON.stringify({
+        message: "user is deleted successfully",
+        user: deleteUser,
+      }),
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return new NextResponse("Error in deleting user" + error.message, {
       status: 500,
     });
   }
