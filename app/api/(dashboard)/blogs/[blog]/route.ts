@@ -139,5 +139,57 @@ export const PATCH = async (request: Request, context: { params: any }) => {
 
 // DELETE a single BLOG
 export const DELETE = async (request: Request, context: { params: any }) => {
-const blogId = context.params.blog;
-}
+  const blogId = context.params.blog;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    // validation for userId
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      return new NextResponse(
+        JSON.stringify({ message: "Invalid or Missing userId" }),
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // validation for dyanimic blog
+    if (!blogId || !Types.ObjectId.isValid(blogId)) {
+      return new NextResponse(
+        JSON.stringify({ message: "Invalid or Missing blogId" }),
+        {
+          status: 400,
+        }
+      );
+    }
+    await connect();
+    // find the userId
+    const user = await User.findById(userId);
+    // validation for user
+    if (!user) {
+      return new NextResponse(JSON.stringify({ message: "User Not Found" }), {
+        status: 404,
+      });
+    }
+    // validation for blog existent
+    const blog = await Blog.findOne({ _id: blogId, user: userId });
+    if (!blog) {
+      return new NextResponse(JSON.stringify({ message: "Blog not found" }), {
+        status: 404,
+      });
+    }
+    await Blog.findByIdAndDelete(blogId);
+    // response
+    return new NextResponse(
+      JSON.stringify({
+        message: "Blog is Deleted",
+      }),
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return new NextResponse("Error in deleting a blog" + error.message, {
+      status: 500,
+    });
+  }
+};

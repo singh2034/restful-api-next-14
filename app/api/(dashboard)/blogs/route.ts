@@ -11,6 +11,8 @@ export const GET = async (request: Request) => {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const categoryId = searchParams.get("categoryId");
+    const searchKeywords = searchParams.get("keywords") as string;
+
     // validation for userId
     if (!userId || !Types.ObjectId.isValid(userId)) {
       return new NextResponse(
@@ -52,6 +54,17 @@ export const GET = async (request: Request) => {
       user: new Types.ObjectId(userId),
       category: new Types.ObjectId(categoryId),
     };
+    // validation for search keywords
+    if (searchKeywords) {
+      filter.$or = [
+        {
+          title: { $regex: searchKeywords, $options: "i" },
+        },
+        {
+          description: { $regex: searchKeywords, $options: "i" },
+        },
+      ];
+    }
     // TODO
     const blogs = await Blog.find(filter);
     return new NextResponse(JSON.stringify({ blogs }), { status: 200 });
