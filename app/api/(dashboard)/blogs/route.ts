@@ -12,6 +12,10 @@ export const GET = async (request: Request) => {
     const userId = searchParams.get("userId");
     const categoryId = searchParams.get("categoryId");
     const searchKeywords = searchParams.get("keywords") as string;
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const page: any = parseInt(searchParams.get("page") || "1");
+    const limit: any = parseInt(searchParams.get("limit") || "10");
 
     // validation for userId
     if (!userId || !Types.ObjectId.isValid(userId)) {
@@ -65,8 +69,25 @@ export const GET = async (request: Request) => {
         },
       ];
     }
-    // TODO
-    const blogs = await Blog.find(filter);
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    } else if (startDate) {
+      filter.createdAt = {
+        $gte: new Date(startDate),
+      };
+    } else if (endDate) {
+      filter.createdAt = {
+        $lte: new Date(endDate),
+      };
+    }
+    const skip = (page - 1) * limit;
+    const blogs = await Blog.find(filter)
+      .sort({ createdAt: "asc" })
+      .skip(skip)
+      .limit(limit);
     return new NextResponse(JSON.stringify({ blogs }), { status: 200 });
   } catch (error: any) {
     return new NextResponse("Error in fetching blogs" + error.message, {
