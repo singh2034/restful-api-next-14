@@ -14,7 +14,7 @@ export default function middleware(request: Request) {
   const authResult = authMiddleware(request);
   if (!authResult?.isValid) {
     return new NextResponse(
-      JSON.stringify({ message: "Unauthorized Access" }),
+      JSON.stringify({ message: "Access Denied - Unauthorized Access" }),
       { status: 401 }
     );
   }
